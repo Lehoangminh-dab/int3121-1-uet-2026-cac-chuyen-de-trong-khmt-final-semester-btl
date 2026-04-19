@@ -1,0 +1,10 @@
+# Unity (interpretAR_Unity)
+interpretAR/interpretAR_Unity/[Ll]ibrary/
+interpretAR/interpretAR_Unity/[Tt]emp/
+interpretAR/interpretAR_Unity/[Oo]bj/
+interpretAR/interpretAR_Unity/[Bb]uild/
+interpretAR/interpretAR_Unity/[Ll]ogs/
+interpretAR/interpretAR_Unity/[Mm]emoryCaptures/
+interpretAR/interpretAR_Unity/UserSettings/
+*.apk
+*.unitypackage

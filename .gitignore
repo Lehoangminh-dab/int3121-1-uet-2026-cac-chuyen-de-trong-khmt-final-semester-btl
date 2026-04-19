@@ -17,3 +17,4 @@ interpretAR/**/captures/
 *.iml
 *.apk
 *.aab
+*.class

@@ -1,10 +1,10 @@
 # Software Requirements Specification
 ## For ViSignAR
 
-Version 1.2  
+Version 1.3  
 Prepared by Project Team  
 UET  
-2026-05-13
+2026-05-19
 
 ## Table of Contents
 <!-- TOC -->
@@ -38,12 +38,13 @@ UET
 |------|------|--------------------|---------|
 | Project Team | 2026-05-13 | Initial ViSignAR SRS draft | 1.0 |
 | Project Team | 2026-05-13 | One-way speech-only scope, Expo-first delivery, deterministic dictionary and animation specification | 1.2 |
+| Project Team | 2026-05-19 | Replace Unity embedded runtime with ViroReact AR module (ARKit/ARCore). Sign clips delivered as pre-rendered VSL reference videos anchored in AR scene. Bridge contract `playSequence(signIds, delayMs)` unchanged. Driven by resource constraints (team has no 3D rigging experience, single-week delivery window). | 1.3 |
 
 ## 1. Introduction
 This SRS defines requirements for ViSignAR, a mobile app that converts live Vietnamese speech into Vietnamese Sign Language (VSL) 3D animation output.
 
 ### 1.1 Document Purpose
-This SRS defines concrete, testable requirements for product, engineering, and QA so that any team can implement ViSignAR consistently in Unity and Expo.
+This SRS defines concrete, testable requirements for product, engineering, and QA so that any team can implement ViSignAR consistently using ViroReact AR (ARKit/ARCore) and Expo.
 
 ### 1.2 Product Scope
 ViSignAR supports one direction only: live Vietnamese speech -> VSL 3D sign animation.  
@@ -62,7 +63,10 @@ ViSignAR does not include typed text input, reverse translation, account systems
 ### 1.4 References
 - React Native docs: [https://reactnative.dev/docs/getting-started](https://reactnative.dev/docs/getting-started)
 - Expo docs: [https://docs.expo.dev/](https://docs.expo.dev/)
-- Unity Manual: [https://docs.unity3d.com/Manual/index.html](https://docs.unity3d.com/Manual/index.html)
+- ViroReact docs: [https://viro-community.readme.io/](https://viro-community.readme.io/)
+- ViroReact repository (`@reactvision/react-viro`): [https://github.com/ReactVision/viro](https://github.com/ReactVision/viro)
+- Google ARCore docs: [https://developers.google.com/ar](https://developers.google.com/ar)
+- Apple ARKit docs: [https://developer.apple.com/augmented-reality/arkit/](https://developer.apple.com/augmented-reality/arkit/)
 - OpenAI Speech-to-Text guide: [https://platform.openai.com/docs/guides/speech-to-text](https://platform.openai.com/docs/guides/speech-to-text)
 - Vietnamese sign dictionary portal: [https://tudienngonngukyhieu.com/](https://tudienngonngukyhieu.com/)
 - Vietnamese sign lesson portal: [https://nnkh.thaiphong.net/](https://nnkh.thaiphong.net/)
@@ -76,21 +80,21 @@ Section 2 defines product boundaries. Section 3 defines implementation requireme
 ## 2. Product Overview
 
 ### 2.1 Product Perspective
-ViSignAR is a mobile translation app with deterministic speech-to-sign conversion and Unity-based 3D avatar rendering.
+ViSignAR is a mobile translation app with deterministic speech-to-sign conversion and AR-based sign clip rendering via ViroReact (ARKit on iOS, ARCore on Android). Sign clips are pre-rendered VSL reference videos anchored in front of the user in 3D space, preserving the AR property of the product without requiring a fully rigged 3D avatar pipeline.
 
 ### 2.2 Product Functions
 - Capture live Vietnamese speech.
 - Transcribe speech to Vietnamese text using STT API.
 - Normalize and tokenize transcript deterministically.
 - Resolve tokens/phrases into sign IDs via dictionary.
-- Play an ordered VSL animation sequence in Unity.
+- Play an ordered VSL sign sequence in an AR scene anchored in front of the user.
 - Show clear status for success and unknown terms.
 
 ### 2.3 Product Constraints
 - UI colors must be exactly `#000000`, `#FFFFFF`, `#013392`.
 - Input channel is live speech only.
 - Translation engine is deterministic dictionary mapping.
-- Stack is minimal: Expo + React Native app shell, Unity embedded runtime, OpenAI STT API.
+- Stack is minimal: Expo + React Native app shell, ViroReact AR module (ARKit/ARCore), OpenAI STT API.
 
 ### 2.4 User Characteristics
 - Primary user: Vietnamese speaker requiring VSL visual output.
@@ -100,7 +104,8 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 ### 2.5 Assumptions and Dependencies
 - Device microphone is available.
 - Device network is available for STT API.
-- Dictionary and Unity animation clips are prepared according to Appendix C and D.
+- Dictionary and AR sign clips are prepared according to Appendix C and D.
+- ARKit (iOS) / ARCore (Android) is available on the deployment device; on devices without ARCore support, the AR scene degrades gracefully (camera passthrough disabled, clip still plays on a 2D plane).
 
 ### 2.6 Apportioning of Requirements
 
@@ -180,12 +185,12 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 | Fields | Descriptions |
 |---|---|
 | ID | REQ-INT-007 |
-| Title | Unity Playback Bridge |
-| Statement | RN shell shall call Unity bridge method `playSequence(signIds, delayMs)` to play ordered sign clips. |
-| Rationale | Creates deterministic playback handoff to avatar renderer. |
-| Acceptance Criteria | Bridge call with valid sign IDs triggers ordered playback in Unity scene. |
+| Title | AR Playback Bridge |
+| Statement | RN shell shall call the AR module entry point `playSequence(signIds, delayMs)` to play ordered sign clips anchored in the AR scene. |
+| Rationale | Creates deterministic playback handoff to the AR sign renderer. |
+| Acceptance Criteria | Bridge call with valid sign IDs triggers ordered playback in the AR scene with non-overlapping clips and the configured inter-sign delay. |
 | Verification Method | Test |
-| More Information | Bridge must return playback completion callback. |
+| More Information | Implementation uses ViroReact `ViroARSceneNavigator` with `ViroVideo` nodes anchored at a fixed position in front of the camera. Bridge must return a playback completion callback via the `onFinish` event of the active clip. |
 
 ### 3.2 Functional
 
@@ -272,12 +277,12 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 | Fields | Descriptions |
 |---|---|
 | ID | REQ-FUNC-009 |
-| Title | Unity Avatar Output |
-| Statement | Each resolved sign ID shall map to a Unity animation clip with defined start pose, stroke movement, hold, and return phases. |
-| Rationale | Guarantees implementable and consistent sign rendering. |
-| Acceptance Criteria | For every sign in mandatory dictionary, corresponding clip exists and passes phase validation. |
+| Title | AR Sign Clip Output |
+| Statement | Each resolved sign ID shall map to an AR sign clip asset whose visible movement exhibits the start, stroke, hold, and return phases defined in Appendix D. |
+| Rationale | Guarantees implementable and consistent sign rendering regardless of clip format (pre-rendered VSL reference video or rigged 3D animation). |
+| Acceptance Criteria | For every sign in mandatory dictionary, a corresponding clip asset exists in `ViSignAR/assets/signs/<signId>.mp4`, is registered in `signAssets.ts`, and passes phase inspection against Appendix D. |
 | Verification Method | Inspection |
-| More Information | Phase specification is defined in Appendix D. |
+| More Information | v1.3 delivers clips as pre-rendered VSL reference videos sourced from `tudienngonngukyhieu.com` (see Appendix D.2). Format may evolve to rigged 3D animation in future versions without breaking the dictionary contract. |
 
 | Fields | Descriptions |
 |---|---|
@@ -458,7 +463,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 | REQ-INT-006 | test | test-stt-timeout-retry.md | Planned | API event traces |
 | REQ-FUNC-002 | test | test-transcript-queue-order.md | Planned | Queue log snapshots |
 | REQ-FUNC-004 | test | test-phrase-first-lookup.md | Planned | Lookup trace logs |
-| REQ-FUNC-006 | test | test-playback-worker-order.md | Planned | Unity playback logs |
+| REQ-FUNC-006 | test | test-playback-worker-order.md | Planned | AR playback logs |
 | REQ-FUNC-009 | inspection | inspect-sign-clip-phases.md | Planned | Clip phase checklist |
 | REQ-FUNC-010 | inspection | scope-audit.md | Planned | Scope compliance report |
 | REQ-REL-001 | test | retry-flow-validation.md | Planned | Failure-recovery run output |
@@ -476,7 +481,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 
 ### Appendix B: Prototype Success Criteria
 - Speech-to-sign flow is operational end-to-end.
-- Unity avatar plays deterministic sign sequences from dictionary.
+- AR scene plays deterministic sign sequences from dictionary, anchored in front of the user via ARKit/ARCore.
 - App runs and builds through Expo workflow.
 
 ### Appendix C: Minimal Dictionary Schema
@@ -518,7 +523,7 @@ The following words/phrases are required in v1 dictionary:
   - Family words: [https://nnkh.thaiphong.net/bai-hoc/bai-8.php](https://nnkh.thaiphong.net/bai-hoc/bai-8.php)
 
 #### D.3 Animation clip contract per sign
-Each `SIGN-*` clip in Unity shall implement:
+Each `SIGN-*` clip (regardless of underlying format — pre-rendered video or rigged 3D animation) shall exhibit the following four phases when played:
 1. `phase_start` (0.0s-0.2s): neutral pose acquisition.
 2. `phase_stroke` (0.2s-0.8s): main sign movement.
 3. `phase_hold` (0.8s-0.95s): endpoint hold for readability.

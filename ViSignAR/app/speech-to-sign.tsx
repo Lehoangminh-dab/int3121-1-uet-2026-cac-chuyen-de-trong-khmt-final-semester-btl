@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBadge, SessionStatus } from '../src/components/StatusBadge'
 import { TranscriptView, TranscriptSegment } from '../src/components/TranscriptView'
-import { UnityView } from '../src/components/UnityView'
+import { ARSignContainer } from '../src/components/ARSignContainer'
 import { Colors, FontSizes, Spacing } from '../src/constants/theme'
 import { useSettings } from '../src/hooks/useSettings'
 import { log, setSession } from '../src/services/logger'
@@ -208,9 +208,9 @@ export default function SpeechToSignScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.container}>
 
-        {/* Unity avatar */}
+        {/* AR sign view */}
         <View style={styles.unityArea}>
-          <UnityView />
+          <ARSignContainer />
         </View>
 
         {/* Status + recording timer */}

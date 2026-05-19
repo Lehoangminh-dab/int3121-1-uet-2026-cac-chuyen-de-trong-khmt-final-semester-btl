@@ -47,15 +47,11 @@
         }
       ],
       [
-        "@reactvision/react-viro",
+        "expo-camera",
         {
-          "ios": {
-            "cameraUsagePermission": "ViSignAR cần camera để hiển thị ngôn ngữ ký hiệu trong AR.",
-            "microphoneUsagePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt."
-          },
-          "android": {
-            "xRMode": ["AR"]
-          }
+          "cameraPermission": "ViSignAR cần camera để hiển thị ngôn ngữ ký hiệu chồng lên khung hình thực.",
+          "microphonePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt.",
+          "recordAudioAndroid": false
         }
       ]
     ]

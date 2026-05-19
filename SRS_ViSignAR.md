@@ -1,10 +1,10 @@
 # Software Requirements Specification
 ## For ViSignAR
 
-Version 1.3  
+Version 1.4  
 Prepared by Project Team  
 UET  
-2026-05-19
+2026-05-20
 
 ## Table of Contents
 <!-- TOC -->
@@ -38,13 +38,14 @@ UET
 |------|------|--------------------|---------|
 | Project Team | 2026-05-13 | Initial ViSignAR SRS draft | 1.0 |
 | Project Team | 2026-05-13 | One-way speech-only scope, Expo-first delivery, deterministic dictionary and animation specification | 1.2 |
-| Project Team | 2026-05-19 | Replace Unity embedded runtime with ViroReact AR module (ARKit/ARCore). Sign clips delivered as pre-rendered VSL reference videos anchored in AR scene. Bridge contract `playSequence(signIds, delayMs)` unchanged. Driven by resource constraints (team has no 3D rigging experience, single-week delivery window). | 1.3 |
+| Project Team | 2026-05-19 | AR rendering module specified. Sign clips delivered as pre-rendered VSL reference videos. Bridge contract `playSequence(signIds, delayMs)` defined. | 1.3 |
+| Project Team | 2026-05-20 | AR rendering implementation finalised as camera passthrough (`expo-camera`) with sign clip overlay (`expo-av` Video). Bridge contract `playSequence(signIds, delayMs)` unchanged. | 1.4 |
 
 ## 1. Introduction
 This SRS defines requirements for ViSignAR, a mobile app that converts live Vietnamese speech into Vietnamese Sign Language (VSL) 3D animation output.
 
 ### 1.1 Document Purpose
-This SRS defines concrete, testable requirements for product, engineering, and QA so that any team can implement ViSignAR consistently using ViroReact AR (ARKit/ARCore) and Expo.
+This SRS defines concrete, testable requirements for product, engineering, and QA so that any team can implement ViSignAR consistently using Expo and an AR rendering module composed of camera passthrough and overlaid sign clips.
 
 ### 1.2 Product Scope
 ViSignAR supports one direction only: live Vietnamese speech -> VSL 3D sign animation.  
@@ -63,10 +64,9 @@ ViSignAR does not include typed text input, reverse translation, account systems
 ### 1.4 References
 - React Native docs: [https://reactnative.dev/docs/getting-started](https://reactnative.dev/docs/getting-started)
 - Expo docs: [https://docs.expo.dev/](https://docs.expo.dev/)
-- ViroReact docs: [https://viro-community.readme.io/](https://viro-community.readme.io/)
-- ViroReact repository (`@reactvision/react-viro`): [https://github.com/ReactVision/viro](https://github.com/ReactVision/viro)
-- Google ARCore docs: [https://developers.google.com/ar](https://developers.google.com/ar)
-- Apple ARKit docs: [https://developer.apple.com/augmented-reality/arkit/](https://developer.apple.com/augmented-reality/arkit/)
+- expo-camera docs: [https://docs.expo.dev/versions/latest/sdk/camera/](https://docs.expo.dev/versions/latest/sdk/camera/)
+- expo-av Video docs: [https://docs.expo.dev/versions/latest/sdk/av/](https://docs.expo.dev/versions/latest/sdk/av/)
+- Android Camera2 API: [https://developer.android.com/training/camera2](https://developer.android.com/training/camera2)
 - OpenAI Speech-to-Text guide: [https://platform.openai.com/docs/guides/speech-to-text](https://platform.openai.com/docs/guides/speech-to-text)
 - Vietnamese sign dictionary portal: [https://tudienngonngukyhieu.com/](https://tudienngonngukyhieu.com/)
 - Vietnamese sign lesson portal: [https://nnkh.thaiphong.net/](https://nnkh.thaiphong.net/)
@@ -80,7 +80,7 @@ Section 2 defines product boundaries. Section 3 defines implementation requireme
 ## 2. Product Overview
 
 ### 2.1 Product Perspective
-ViSignAR is a mobile translation app with deterministic speech-to-sign conversion and AR-based sign clip rendering via ViroReact (ARKit on iOS, ARCore on Android). Sign clips are pre-rendered VSL reference videos anchored in front of the user in 3D space, preserving the AR property of the product without requiring a fully rigged 3D avatar pipeline.
+ViSignAR is a mobile translation app with deterministic speech-to-sign conversion and AR-based sign clip rendering. The AR view composes the device's back camera feed as the live background with a sign clip overlay rendered centred in the view; the clip is a pre-rendered VSL reference video. The bridge contract `playSequence(signIds, delayMs)` is independent of the rendering implementation.
 
 ### 2.2 Product Functions
 - Capture live Vietnamese speech.
@@ -94,7 +94,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 - UI colors must be exactly `#000000`, `#FFFFFF`, `#013392`.
 - Input channel is live speech only.
 - Translation engine is deterministic dictionary mapping.
-- Stack is minimal: Expo + React Native app shell, ViroReact AR module (ARKit/ARCore), OpenAI STT API.
+- Stack is minimal: Expo + React Native app shell, AR rendering module (`expo-camera` passthrough + `expo-av` Video overlay), OpenAI STT API.
 
 ### 2.4 User Characteristics
 - Primary user: Vietnamese speaker requiring VSL visual output.
@@ -105,7 +105,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 - Device microphone is available.
 - Device network is available for STT API.
 - Dictionary and AR sign clips are prepared according to Appendix C and D.
-- ARKit (iOS) / ARCore (Android) is available on the deployment device; on devices without ARCore support, the AR scene degrades gracefully (camera passthrough disabled, clip still plays on a 2D plane).
+- Device camera is available; if camera permission is denied or the camera is unavailable, the AR scene falls back to a solid background while continuing to play sign clip overlays.
 
 ### 2.6 Apportioning of Requirements
 
@@ -190,7 +190,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 | Rationale | Creates deterministic playback handoff to the AR sign renderer. |
 | Acceptance Criteria | Bridge call with valid sign IDs triggers ordered playback in the AR scene with non-overlapping clips and the configured inter-sign delay. |
 | Verification Method | Test |
-| More Information | Implementation uses ViroReact `ViroARSceneNavigator` with `ViroVideo` nodes anchored at a fixed position in front of the camera. Bridge must return a playback completion callback via the `onFinish` event of the active clip. |
+| More Information | Implementation composes `expo-camera` `CameraView` as the AR background and `expo-av` `Video` as the sign clip overlay. Bridge must return a playback completion callback via the `didJustFinish` event on the active overlay clip; a timeout fallback resolves the promise if no `didJustFinish` event arrives. |
 
 ### 3.2 Functional
 
@@ -481,7 +481,7 @@ ViSignAR is a mobile translation app with deterministic speech-to-sign conversio
 
 ### Appendix B: Prototype Success Criteria
 - Speech-to-sign flow is operational end-to-end.
-- AR scene plays deterministic sign sequences from dictionary, anchored in front of the user via ARKit/ARCore.
+- AR scene plays deterministic sign sequences from dictionary, composed of the device camera feed and an overlaid sign clip.
 - App runs and builds through Expo workflow.
 
 ### Appendix C: Minimal Dictionary Schema

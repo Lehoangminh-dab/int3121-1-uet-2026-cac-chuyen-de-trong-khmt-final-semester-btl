@@ -1,27 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { ViroARSceneNavigator, ViroMaterials } from '@reactvision/react-viro'
 import { ARSignScene } from './ARSignScene'
+import { hasVideo } from '../constants/signAssets'
 
 // ---------------------------------------------------------------------------
-// Container AR — thay UnityView. Skeleton bước A2.
+// Container AR — thay UnityView.
 //
-// Contract giữ nguyên với pipeline hiện hữu (playback.ts, speech-to-sign.tsx):
+// Contract:
 //   playSequence(signIds: string[], delayMs: number) => Promise<void>
-//
-// Role C sẽ hoàn thiện: nối ViroVideo.onFinish vào resolveCurrentClip.
+//   - Cap nhat currentSignId vao ARSignScene
+//   - Cho event didJustFinish tu Video (overlay)
+//   - Fallback timeout neu video missing hoac loi loaded
 // ---------------------------------------------------------------------------
-
-ViroMaterials.createMaterials({
-  boxRed: {
-    diffuseColor: '#013392',
-  },
-})
 
 const FALLBACK_CLIP_MS = 1500
 
 let setCurrentSignIdGlobal: ((id: string | null) => void) | null = null
 let resolveCurrentClip: (() => void) | null = null
+
+function consumeResolve() {
+  const r = resolveCurrentClip
+  resolveCurrentClip = null
+  if (r) r()
+}
 
 export function ARSignContainer() {
   const [currentSignId, setCurrentSignId] = useState<string | null>(null)
@@ -33,22 +34,20 @@ export function ARSignContainer() {
     }
   }, [])
 
+  const handleFinish = useCallback(() => {
+    consumeResolve()
+  }, [])
+
+  const handleMissing = useCallback(() => {
+    // missing asset -> let fallback timeout in playSequence resolve
+  }, [])
+
   return (
     <View style={styles.container}>
-      <ViroARSceneNavigator
-        autofocus
-        initialScene={{
-          scene: () => (
-            <ARSignScene
-              currentSignId={currentSignId}
-              onFinish={() => {
-                resolveCurrentClip?.()
-                resolveCurrentClip = null
-              }}
-            />
-          ),
-        }}
-        style={styles.scene}
+      <ARSignScene
+        currentSignId={currentSignId}
+        onFinish={handleFinish}
+        onMissingAsset={handleMissing}
       />
     </View>
   )
@@ -59,7 +58,8 @@ export async function playSequence(signIds: string[], delayMs: number = 1000): P
     const signId = signIds[i]
     setCurrentSignIdGlobal?.(signId)
 
-    // TODO(C): chờ event onFinish thật từ ViroVideo. Hiện dùng timeout fallback.
+    const timeoutMs = hasVideo(signId) ? FALLBACK_CLIP_MS : FALLBACK_CLIP_MS / 2
+
     await new Promise<void>((resolve) => {
       resolveCurrentClip = resolve
       setTimeout(() => {
@@ -67,7 +67,7 @@ export async function playSequence(signIds: string[], delayMs: number = 1000): P
           resolveCurrentClip = null
           resolve()
         }
-      }, FALLBACK_CLIP_MS)
+      }, timeoutMs)
     })
 
     setCurrentSignIdGlobal?.(null)
@@ -80,8 +80,7 @@ export async function playSequence(signIds: string[], delayMs: number = 1000): P
 
 export function clearCurrentSign() {
   setCurrentSignIdGlobal?.(null)
-  resolveCurrentClip?.()
-  resolveCurrentClip = null
+  consumeResolve()
 }
 
 function sleep(ms: number): Promise<void> {
@@ -90,9 +89,6 @@ function sleep(ms: number): Promise<void> {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  scene: {
     flex: 1,
   },
 })

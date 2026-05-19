@@ -2,7 +2,7 @@
 
 Ứng dụng mobile chuyển đổi **giọng nói tiếng Việt → ngôn ngữ ký hiệu Việt Nam (VSL) trong không gian AR**.
 
-Người dùng nói vào microphone → OpenAI Whisper nhận dạng → tra từ điển VSL → AR scene (ViroReact / ARKit / ARCore) phát clip ký hiệu được anchor trước mặt người dùng.
+Người dùng nói vào microphone → OpenAI Whisper nhận dạng → tra từ điển VSL → AR scene (camera passthrough + clip ký hiệu overlay) phát clip ký hiệu chồng lên khung hình thực qua camera.
 
 > Dự án INT3121-1 — UET 2026
 
@@ -16,8 +16,8 @@ Người dùng nói vào microphone → OpenAI Whisper nhận dạng → tra t�
 | Điều hướng | expo-router v6 |
 | Ghi âm | expo-av |
 | STT | OpenAI Whisper (`whisper-1`, `language: vi`) |
-| AR rendering | ViroReact (`@reactvision/react-viro` 2.55) — ARKit (iOS) / ARCore (Android), Fabric (New Architecture) |
-| Sign clips | Pre-rendered VSL reference videos (mp4, 1200ms, 30fps) phát qua `ViroVideo` |
+| AR rendering | `expo-camera` `CameraView` (camera passthrough background) + `expo-av` `Video` (sign clip overlay) |
+| Sign clips | Pre-rendered VSL reference videos (mp4, 1200ms, 30fps) phát qua `expo-av` `Video` |
 | Từ điển | JSON tĩnh, deterministic lookup |
 | Build | Expo Application Services (EAS) |
 
@@ -43,9 +43,9 @@ ViSignAR/
 │   ├── components/
 │   │   ├── StatusBadge.tsx      # 6 trạng thái: idle/listening/processing/playing/unknown/error
 │   │   ├── TranscriptView.tsx
-│   │   ├── ARSignScene.tsx      # ViroARScene + ViroVideo anchored -1.2m trước camera
-│   │   ├── ARSignContainer.tsx  # ViroARSceneNavigator + playSequence(signIds, delayMs)
-│   │   └── UnityView.tsx        # Stub cũ (2D fallback, có thể bật qua Settings)
+│   │   ├── ARSignScene.tsx      # CameraView (back camera) + Video overlay (sign clip)
+│   │   ├── ARSignContainer.tsx  # Container + playSequence(signIds, delayMs)
+│   │   └── UnityView.tsx        # Stub cũ — không dùng trong build chính
 │   └── services/
 │       ├── normalize.ts         # lowercase + trim + collapse spaces, giữ dấu tiếng Việt
 │       ├── lookup.ts            # Phrase-first longest-match dictionary lookup
@@ -140,7 +140,7 @@ npx expo export --platform android    # Bundle test
 | REQ-INT-003 | 6 status badge | ✅ |
 | REQ-INT-004 | Mic chỉ bật khi active session | ✅ |
 | REQ-INT-006 | OpenAI Whisper + timeout 15s + retry + hallucination filter | ✅ |
-| REQ-INT-007 | AR bridge `playSequence()` (ViroReact) | 🟡 Skeleton xong, chờ B/C |
+| REQ-INT-007 | AR bridge `playSequence()` (camera + overlay) | ✅ |
 | REQ-FUNC-001 | Chỉ nhận speech input | ✅ |
 | REQ-FUNC-003 | Normalize deterministic | ✅ |
 | REQ-FUNC-004 | Phrase-first longest-match lookup | ✅ |
@@ -163,17 +163,15 @@ npx expo export --platform android    # Bundle test
 | 1 | UI Shell + Core Pipeline (normalize, lookup, logger, playback) | ✅ Hoàn thành |
 | 2 | Settings store, consent gate, delay wiring, UnityView stub có feedback | ✅ Hoàn thành |
 | 3 | STT production-ready: `SttError` types, auto-stop 30s, min duration, stub xoay vòng, hallucination filter (`no_speech_prob`), đã test với key thật | ✅ Hoàn thành |
-| 4 | AR integration: `expo prebuild` + ViroReact + 23 video clip + bridge thật | 🟡 A1+A2 xong (Tech Lead) — chờ B (video) + C (ViroVideo + pipeline) |
-| 5 | Demo prep: 5× end-to-end, Android (ARCore device thật), EAS build | 🔲 Chưa làm |
+| 4 | AR integration: `expo prebuild` + `expo-camera` + `expo-av` Video overlay + 23 video clip + bridge | ✅ Pipeline + AR scene xong — chờ B fill 23 video clip |
+| 5 | Demo prep: 5× end-to-end, EAS build APK release | 🔲 Chưa làm |
 
 ---
 
 ## Bước tiếp theo
 
-> Phase 4 đã đổi hướng sang **ViroReact AR** thay vì Unity — xem revision v1.3 trong `SRS_ViSignAR.md` để rõ lý do (resource constraint + timeline 7 ngày + nhóm chưa có kinh nghiệm 3D rigging).
+Phân công 3 vai trò:
 
-Phân công 3 vai trò (chi tiết: `~/.claude/plans/h-y-c-v-t-m-virtual-noodle.md`):
-
-- **A — Tech Lead:** ✅ A1+A2 (prebuild + ViroReact + skeleton) — commit `9d5b347` trên branch `feat/ar-base`. Còn lại: review PR của B/C, video demo backup.
+- **A — Tech Lead:** ✅ Pipeline + AR scene + integration xong trên branch `feat/ar-base`. Còn lại: review PR của B, demo dry-run, video demo backup.
 - **B — Content Engineer:** Thu thập 23 video VSL từ tudienngonngukyhieu.com → cắt 1200ms bằng ffmpeg → fill `src/constants/signAssets.ts`. Ưu tiên 8 sign priority=10 trước.
-- **C — Integration Engineer:** Thay `ViroBox` trong `ARSignScene.tsx` bằng `ViroVideo`, nối `onFinish` vào `resolveCurrentClip`, cập nhật `playback.ts` + `app/speech-to-sign.tsx`, build EAS APK, test 5× E2E trên ARCore device thật.
+- **C — Build & Test:** Build EAS APK release, test 5× E2E flow speech-to-sign trên Android device/emulator.

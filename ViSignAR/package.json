@@ -5,14 +5,15 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "android:emu": "start /B %LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -avd Medium_Phone_API_35 & %LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe wait-for-device && expo start --android",
+    "emu:boot": "start /B %LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -avd Medium_Phone_API_35 && %LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe wait-for-device",
+    "android:emu": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
-    "@reactvision/react-viro": "^2.55.0",
     "expo": "~54.0.33",
     "expo-av": "~16.0.8",
+    "expo-camera": "~17.0.8",
     "expo-constants": "~18.0.13",
     "expo-linking": "~8.0.12",
     "expo-router": "~6.0.23",
@@ -25,9 +26,6 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
-  },
-  "overrides": {
-    "react": "19.1.0"
   },
   "private": true
 }

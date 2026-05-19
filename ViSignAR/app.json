@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "ViSignAR cần quyền truy cập camera để hiển thị ngôn ngữ ký hiệu trong không gian thực (AR)."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,14 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET"
+      ],
+      "package": "com.anonymous.ViSignAR"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -34,6 +44,18 @@
         "expo-av",
         {
           "microphonePermission": "ViSignAR cần quyền truy cập microphone để nhận dạng giọng nói tiếng Việt."
+        }
+      ],
+      [
+        "@reactvision/react-viro",
+        {
+          "ios": {
+            "cameraUsagePermission": "ViSignAR cần camera để hiển thị ngôn ngữ ký hiệu trong AR.",
+            "microphoneUsagePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt."
+          },
+          "android": {
+            "xRMode": ["AR"]
+          }
         }
       ]
     ]

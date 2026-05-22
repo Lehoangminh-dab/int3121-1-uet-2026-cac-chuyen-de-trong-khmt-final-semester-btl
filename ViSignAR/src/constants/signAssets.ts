@@ -5,9 +5,7 @@
 // ---------------------------------------------------------------------------
 
 export const SIGN_VIDEOS: Record<string, any> = {
-  // TODO(B): Bổ sung 23 entries khi video sẵn sàng. Ví dụ:
-  // 'SIGN-CHAO': require('../../assets/signs/SIGN-CHAO.mp4'),
-  // 'SIGN-CAM_ON': require('../../assets/signs/SIGN-CAM_ON.mp4'),
+  'SIGN-DEMO': require('../../assets/signs/SIGN-DEMO.mp4'),
 }
 
 export function hasVideo(signId: string): boolean {

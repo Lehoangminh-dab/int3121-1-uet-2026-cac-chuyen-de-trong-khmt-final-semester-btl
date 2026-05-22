@@ -1,25 +1,50 @@
-import { ViroARScene, ViroAmbientLight, ViroBox, ViroNode } from '@reactvision/react-viro'
+import { useEffect, useState } from 'react'
+import {
+  ViroARScene,
+  ViroAmbientLight,
+  ViroVideo,
+  ViroNode,
+  ViroText,
+} from '@reactvision/react-viro'
+import { SIGN_VIDEOS } from '../constants/signAssets'
+import { subscribeCurrentSign, notifyVideoFinished } from './arSignBus'
 
-// ---------------------------------------------------------------------------
-// AR scene cho ViSignAR. Skeleton bước A1/A2 — hiện hiển thị ViroBox đỏ test.
-// Role C sẽ thay ViroBox bằng ViroVideo + SIGN_VIDEOS[currentSignId].
-// ---------------------------------------------------------------------------
+const VIDEO_WIDTH = 0.8
+const VIDEO_HEIGHT = 0.8
+const VIDEO_POSITION: [number, number, number] = [0, -0.2, -1.2]
 
-interface ARSignSceneProps {
-  currentSignId?: string | null
-  onFinish?: () => void
-}
+export function ARSignScene() {
+  const [currentSignId, setCurrentSignId] = useState<string | null>(null)
 
-export function ARSignScene(_props: ARSignSceneProps) {
+  useEffect(() => subscribeCurrentSign(setCurrentSignId), [])
+
+  const source = currentSignId
+    ? (SIGN_VIDEOS[currentSignId] ?? SIGN_VIDEOS['SIGN-DEMO'])
+    : null
+
   return (
     <ViroARScene>
       <ViroAmbientLight color="#FFFFFF" />
-      <ViroNode position={[0, 0, -1.2]}>
-        <ViroBox
-          position={[0, 0, 0]}
-          scale={[0.3, 0.3, 0.3]}
-          materials={['boxRed']}
-        />
+      <ViroNode position={VIDEO_POSITION}>
+        {source ? (
+          <ViroVideo
+            key={currentSignId}
+            source={source}
+            width={VIDEO_WIDTH}
+            height={VIDEO_HEIGHT}
+            loop={false}
+            paused={false}
+            onFinish={notifyVideoFinished}
+            onError={notifyVideoFinished}
+          />
+        ) : (
+          <ViroText
+            text="Nhan Bat dau va noi"
+            width={2}
+            height={0.4}
+            style={{ fontSize: 22, color: '#FFFFFF', textAlign: 'center' }}
+          />
+        )}
       </ViroNode>
     </ViroARScene>
   )

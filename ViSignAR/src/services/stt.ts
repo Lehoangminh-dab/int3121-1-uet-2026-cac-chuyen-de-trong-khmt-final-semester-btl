@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av'
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av'
 import { log } from './logger'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -83,35 +83,29 @@ export async function startRecording(onAutoStop?: AutoStopCallback): Promise<voi
     await _cleanupRecording()
   }
 
-  await Audio.setAudioModeAsync({
-    allowsRecordingIOS: true,
-    playsInSilentModeIOS: true,
-  })
+  try {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      shouldDuckAndroid: false,
+      staysActiveInBackground: false,
+    })
+  } catch (err) {
+    throw new SttError('unknown', `setAudioMode failed: ${String(err)}`)
+  }
 
-  const { recording: rec } = await Audio.Recording.createAsync({
-    android: {
-      extension: '.m4a',
-      outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-      audioEncoder: Audio.AndroidAudioEncoder.AAC,
-      sampleRate: 16_000,
-      numberOfChannels: 1,
-      bitRate: 64_000,
-    },
-    ios: {
-      extension: '.m4a',
-      outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-      audioQuality: Audio.IOSAudioQuality.MEDIUM,
-      sampleRate: 16_000,
-      numberOfChannels: 1,
-      bitRate: 64_000,
-      linearPCMBitDepth: 16,
-      linearPCMIsBigEndian: false,
-      linearPCMIsFloat: false,
-    },
-    web: {},
-  })
+  let createResult
+  try {
+    createResult = await Audio.Recording.createAsync(
+      Audio.RecordingOptionsPresets.HIGH_QUALITY,
+    )
+  } catch (err) {
+    throw new SttError('unknown', `createRecording failed: ${String(err)}`)
+  }
 
-  recording = rec
+  recording = createResult.recording
   recordingStartedAt = Date.now()
 
   // Auto-stop sau MAX_RECORD_MS

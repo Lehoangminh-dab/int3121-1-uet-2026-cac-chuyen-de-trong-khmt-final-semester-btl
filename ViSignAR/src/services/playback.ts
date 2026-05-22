@@ -1,5 +1,5 @@
 import { log } from './logger'
-import { playSequence as unityPlaySequence } from '../components/UnityView'
+import { playSequence as arPlaySequence } from '../components/ARSignContainer'
 
 // REQ-FUNC-006: single playback worker, không overlap
 // REQ-FUNC-007: inter-sign delay default 1000ms
@@ -47,7 +47,7 @@ async function runWorker() {
     queue = []
 
     log('playback_start', batch.join(','))
-    await unityPlaySequence(batch, defaultDelayMs)
+    await arPlaySequence(batch, defaultDelayMs)
     log('playback_complete', batch.join(','))
   }
 

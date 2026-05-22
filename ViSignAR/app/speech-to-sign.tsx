@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { StatusBadge, SessionStatus } from '../src/components/StatusBadge'
 import { TranscriptView, TranscriptSegment } from '../src/components/TranscriptView'
-import { UnityView } from '../src/components/UnityView'
+import { ARSignContainer } from '../src/components/ARSignContainer'
 import { Colors, FontSizes, Spacing } from '../src/constants/theme'
 import { useSettings } from '../src/hooks/useSettings'
 import { log, setSession } from '../src/services/logger'
@@ -23,22 +23,25 @@ const CLIP_DURATION_MS = 1200
 
 let sessionCounter = 0
 
-// Thông báo lỗi thân thiện theo SttErrorCode
+// Thông báo lỗi thân thiện theo SttErrorCode. Hiển thị kèm code + detail kỹ thuật để debug trên device.
 function sttErrorMessage(err: unknown): string {
   if (err instanceof SttError) {
-    switch (err.code) {
-      case 'permission_denied': return 'Không có quyền microphone.'
-      case 'too_short':         return 'Ghi âm quá ngắn, vui lòng nói dài hơn.'
-      case 'file_too_large':    return 'File ghi âm quá lớn, vui lòng ghi ngắn hơn.'
-      case 'no_speech':         return 'Không nhận ra giọng nói, thử lại.'
-      case 'invalid_key':       return 'API key không hợp lệ. Kiểm tra file .env.'
-      case 'rate_limit':        return 'Quá nhiều yêu cầu. Vui lòng chờ vài giây.'
-      case 'network':           return 'Lỗi mạng hoặc timeout. Kiểm tra kết nối.'
-      case 'api_error':         return 'Lỗi dịch vụ nhận dạng. Thử lại sau.'
-      default:                  return 'Lỗi không xác định. Thử lại.'
-    }
+    const friendly = (() => {
+      switch (err.code) {
+        case 'permission_denied': return 'Không có quyền microphone.'
+        case 'too_short':         return 'Ghi âm quá ngắn, vui lòng nói dài hơn.'
+        case 'file_too_large':    return 'File ghi âm quá lớn, vui lòng ghi ngắn hơn.'
+        case 'no_speech':         return 'Không nhận ra giọng nói, thử lại.'
+        case 'invalid_key':       return 'API key không hợp lệ. Kiểm tra file .env.'
+        case 'rate_limit':        return 'Quá nhiều yêu cầu. Vui lòng chờ vài giây.'
+        case 'network':           return 'Lỗi mạng hoặc timeout. Kiểm tra kết nối.'
+        case 'api_error':         return 'Lỗi dịch vụ nhận dạng. Thử lại sau.'
+        default:                  return 'Lỗi không xác định.'
+      }
+    })()
+    return `${friendly} [${err.code}] ${err.message}`
   }
-  return 'Lỗi kết nối. Nhấn Bắt đầu để thử lại.'
+  return `Lỗi không phân loại. ${String(err)}`
 }
 
 export default function SpeechToSignScreen() {
@@ -208,9 +211,9 @@ export default function SpeechToSignScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.container}>
 
-        {/* Unity avatar */}
+        {/* AR scene */}
         <View style={styles.unityArea}>
-          <UnityView />
+          <ARSignContainer />
         </View>
 
         {/* Status + recording timer */}

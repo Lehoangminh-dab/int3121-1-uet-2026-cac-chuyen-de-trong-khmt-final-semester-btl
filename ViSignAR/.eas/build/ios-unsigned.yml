@@ -1,0 +1,88 @@
+build:
+  name: Build unsigned iOS IPA
+  steps:
+    - eas/checkout
+    - eas/use_npm_token
+    - eas/install_node_modules
+    - eas/resolve_build_config
+    - eas/prebuild:
+        inputs:
+          clean: true
+          platform: ios
+    - run:
+        name: Debug - list project after prebuild
+        command: |
+          pwd
+          ls -la
+          echo "---- ios/ ----"
+          ls -la ios/ 2>&1 || echo "NO ios DIR"
+          echo "---- Podfile ----"
+          cat ios/Podfile 2>&1 | head -30 || echo "NO Podfile"
+    - run:
+        name: Install pods
+        working_directory: ./ios
+        command: |
+          set -euo pipefail
+          pod install --repo-update
+    - run:
+        name: Build .app without signing
+        working_directory: ./ios
+        command: |
+          set -euo pipefail
+          WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" -type d | head -n1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "ERROR: no .xcworkspace found"
+            ls -la
+            exit 1
+          fi
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+          xcodebuild \
+            -workspace "${SCHEME}.xcworkspace" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            EXPANDED_CODE_SIGN_IDENTITY="" \
+            ONLY_ACTIVE_ARCH=NO \
+            build
+    - run:
+        name: Package .app into unsigned .ipa
+        working_directory: ./ios
+        command: |
+          set -x
+          echo "=== build/ tree (top 3 levels) ==="
+          find build -maxdepth 3 -type d 2>&1 | head -50
+          echo "=== all .app under build/ ==="
+          find build -name "*.app" 2>&1
+          APP_PATH=$(find build -name "*.app" -type d | grep -v "\.dSYM" | head -n1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: no .app produced anywhere under build/"
+            exit 1
+          fi
+          echo "Found app: $APP_PATH"
+          rm -rf Payload ViSignAR-unsigned.ipa
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qr ViSignAR-unsigned.ipa Payload
+          ls -lh ViSignAR-unsigned.ipa
+          pwd
+          echo "Absolute IPA path: $(pwd)/ViSignAR-unsigned.ipa"
+    - run:
+        name: Copy IPA to working dir root
+        command: |
+          set -x
+          cp ios/ViSignAR-unsigned.ipa "$EAS_BUILD_WORKINGDIR/ViSignAR-unsigned.ipa"
+          ls -lh "$EAS_BUILD_WORKINGDIR/ViSignAR-unsigned.ipa"
+          echo "EAS_BUILD_WORKINGDIR=$EAS_BUILD_WORKINGDIR"
+          pwd
+    - eas/upload_artifact:
+        inputs:
+          type: application-archive
+          path: '**/ViSignAR-unsigned.ipa'

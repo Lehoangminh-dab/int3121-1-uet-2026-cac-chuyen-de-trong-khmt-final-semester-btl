@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ViSignAR",
-    "slug": "ViSignAR",
+    "slug": "web",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,8 +15,13 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "ViSignAR cần quyền truy cập camera để hiển thị ngôn ngữ ký hiệu trong không gian thực (AR)."
-      }
+        "NSCameraUsageDescription": "ViSignAR cần quyền truy cập camera để hiển thị ngôn ngữ ký hiệu trong không gian thực (AR).",
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
+        "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save photos",
+        "NSMicrophoneUsageDescription": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.ViSignAR"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +36,8 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.INTERNET"
       ],
-      "package": "com.anonymous.ViSignAR"
+      "package": "com.anonymous.ViSignAR",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -54,10 +60,19 @@
             "microphoneUsagePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt."
           },
           "android": {
-            "xRMode": ["AR"]
+            "xRMode": [
+              "AR"
+            ]
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "745909d3-b0ec-4269-bd92-d438bec734c1"
+      }
+    },
+    "owner": "dinhhiep68s-organization"
   }
 }

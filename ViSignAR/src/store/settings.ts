@@ -9,7 +9,7 @@ interface SettingsState {
 }
 
 const state: SettingsState = {
-  delayMs: 1000,
+  delayMs: 1500,
   consentGiven: false,
 }
 

@@ -2,39 +2,47 @@ import { useEffect, useState } from 'react'
 import {
   ViroARScene,
   ViroAmbientLight,
-  ViroVideo,
+  ViroDirectionalLight,
+  Viro3DObject,
   ViroNode,
   ViroText,
 } from '@reactvision/react-viro'
-import { SIGN_VIDEOS } from '../constants/signAssets'
+import { SIGN_MODELS, FALLBACK_SIGN_ID } from '../constants/signAssets'
 import { subscribeCurrentSign, notifyVideoFinished } from './arSignBus'
 
-const VIDEO_WIDTH = 0.8
-const VIDEO_HEIGHT = 0.8
-const VIDEO_POSITION: [number, number, number] = [0, -0.2, -1.2]
+const MODEL_POSITION: [number, number, number] = [0, -0.4, -1.2]
+const MODEL_SCALE: [number, number, number] = [0.5, 0.5, 0.5]
+const ANIMATION_DURATION_MS = 4000
 
 export function ARSignScene() {
   const [currentSignId, setCurrentSignId] = useState<string | null>(null)
 
   useEffect(() => subscribeCurrentSign(setCurrentSignId), [])
 
+  useEffect(() => {
+    if (!currentSignId) return
+    const t = setTimeout(notifyVideoFinished, ANIMATION_DURATION_MS)
+    return () => clearTimeout(t)
+  }, [currentSignId])
+
   const source = currentSignId
-    ? (SIGN_VIDEOS[currentSignId] ?? SIGN_VIDEOS['SIGN-DEMO'])
+    ? (SIGN_MODELS[currentSignId] ?? SIGN_MODELS[FALLBACK_SIGN_ID])
     : null
 
   return (
     <ViroARScene>
-      <ViroAmbientLight color="#FFFFFF" />
-      <ViroNode position={VIDEO_POSITION}>
+      <ViroAmbientLight color="#FFFFFF" intensity={500} />
+      <ViroDirectionalLight color="#FFFFFF" direction={[0, -1, -0.2]} intensity={800} />
+      <ViroNode position={MODEL_POSITION}>
         {source ? (
-          <ViroVideo
+          <Viro3DObject
             key={currentSignId}
             source={source}
-            width={VIDEO_WIDTH}
-            height={VIDEO_HEIGHT}
-            loop={false}
-            paused={false}
-            onFinish={notifyVideoFinished}
+            type="GLB"
+            scale={MODEL_SCALE}
+            rotation={[0, 0, 0]}
+            transformBehaviors={['billboardY']}
+            animation={{ run: true, loop: false }}
             onError={notifyVideoFinished}
           />
         ) : (

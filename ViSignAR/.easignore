@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+android/build/
+android/app/build/
+android/.gradle/
+ios/build/
+ios/Pods/
+Animation-20260523T174405Z-3-001/
+.eas/build/local/
+*.log

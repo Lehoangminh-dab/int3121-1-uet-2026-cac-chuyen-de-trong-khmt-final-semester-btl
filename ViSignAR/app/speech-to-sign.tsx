@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router'
 import { StatusBadge, SessionStatus } from '../src/components/StatusBadge'
 import { TranscriptView, TranscriptSegment } from '../src/components/TranscriptView'
 import { ARSignContainer } from '../src/components/ARSignContainer'
+import { subscribeCurrentSign } from '../src/components/arSignBus'
 import { Colors, FontSizes, Spacing } from '../src/constants/theme'
 import { useSettings } from '../src/hooks/useSettings'
 import { log, setSession } from '../src/services/logger'
@@ -19,7 +20,14 @@ import {
 } from '../src/services/stt'
 import { enqueue, clearQueue, setDefaultDelay, getDefaultDelay } from '../src/services/playback'
 
-const CLIP_DURATION_MS = 1200
+const CLIP_DURATION_MS = 4000
+
+const SIGN_NAMES: Record<string, string> = {
+  'SIGN-CHAO': 'Xin chào',
+  'SIGN-TAM_BIET': 'Tạm biệt',
+  'SIGN-GAP': 'Gặp',
+  'SIGN-LAI': 'Lại',
+}
 
 let sessionCounter = 0
 
@@ -53,6 +61,9 @@ export default function SpeechToSignScreen() {
   const [isRecording, setIsRecording] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [recordingSec, setRecordingSec] = useState(0) // timer hiển thị
+  const [playingSignId, setPlayingSignId] = useState<string | null>(null)
+
+  useEffect(() => subscribeCurrentSign(setPlayingSignId), [])
 
   const segmentCounter = useRef(0)
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -227,6 +238,13 @@ export default function SpeechToSignScreen() {
           )}
         </View>
 
+        {/* Đang phát animation */}
+        {playingSignId && (
+          <Text style={styles.playingBadge}>
+            Đang phát: {SIGN_NAMES[playingSignId] ?? playingSignId}
+          </Text>
+        )}
+
         {/* Transcript */}
         <View style={styles.transcriptArea}>
           <TranscriptView segments={segments} />
@@ -298,5 +316,14 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.3 },
   btnText: { color: Colors.white, fontWeight: '700', fontSize: FontSizes.md },
   errorHint: { color: '#FF6B6B', textAlign: 'center', fontSize: FontSizes.sm },
+  playingBadge: {
+    color: Colors.white,
+    backgroundColor: Colors.blue,
+    textAlign: 'center',
+    fontSize: FontSizes.md,
+    fontWeight: '700',
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
   consentHint: { color: '#FFAA00', textAlign: 'center', fontSize: FontSizes.sm },
 })

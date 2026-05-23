@@ -1,6 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "entries": [
+    { "source": "tạm biệt hẹn gặp lại", "signIds": ["SIGN-TAM_BIET", "SIGN-GAP", "SIGN-LAI"], "priority": 20 },
+    { "source": "hẹn gặp lại", "signIds": ["SIGN-GAP", "SIGN-LAI"],                            "priority": 15 },
+    { "source": "gặp lại",    "signIds": ["SIGN-GAP", "SIGN-LAI"],                             "priority": 15 },
+    { "source": "tạm biệt",   "signIds": ["SIGN-TAM_BIET"],                                    "priority": 10 },
+    { "source": "gặp",        "signIds": ["SIGN-GAP"],                                         "priority": 5  },
+    { "source": "lại",        "signIds": ["SIGN-LAI"],                                         "priority": 5  },
     { "source": "xin chào",  "signIds": ["SIGN-CHAO"],       "priority": 10 },
     { "source": "cảm ơn",    "signIds": ["SIGN-CAM_ON"],     "priority": 10 },
     { "source": "chúng tôi", "signIds": ["SIGN-CHUNG_TOI"],  "priority": 10 },

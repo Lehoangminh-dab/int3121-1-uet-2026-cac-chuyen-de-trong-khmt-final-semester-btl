@@ -1,13 +1,17 @@
 // ---------------------------------------------------------------------------
-// Sign video assets map. Filled by role B (Content Engineer).
-// Mỗi key phải khớp tuyệt đối với `signId` trong assets/dictionary/v1.json.
-// File mp4 đặt tại ViSignAR/assets/signs/<signId>.mp4
+// Sign 3D model assets. Mỗi key phải khớp signId trong assets/dictionary/v1.json.
+// File glb đặt tại ViSignAR/assets/signs/<signId>.glb với animation embedded.
 // ---------------------------------------------------------------------------
 
-export const SIGN_VIDEOS: Record<string, any> = {
-  'SIGN-DEMO': require('../../assets/signs/SIGN-DEMO.mp4'),
+export const SIGN_MODELS: Record<string, any> = {
+  'SIGN-CHAO':     require('../../assets/signs/SIGN-CHAO.glb'),
+  'SIGN-TAM_BIET': require('../../assets/signs/SIGN-TAM_BIET.glb'),
+  'SIGN-GAP':      require('../../assets/signs/SIGN-GAP.glb'),
+  'SIGN-LAI':      require('../../assets/signs/SIGN-LAI.glb'),
 }
 
-export function hasVideo(signId: string): boolean {
-  return signId in SIGN_VIDEOS
+export const FALLBACK_SIGN_ID = 'SIGN-CHAO'
+
+export function hasModel(signId: string): boolean {
+  return signId in SIGN_MODELS
 }

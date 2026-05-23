@@ -18,18 +18,13 @@ const VI_PROMPT =
   'Xin chào, cảm ơn, tôi, bạn, chúng tôi, chúng ta, ai, ở đâu, gì, bao nhiêu, lúc nào, ' +
   'gia đình, cha, mẹ, ông, bà, anh, chị, em, ăn, uống, nước, nhà.'
 
-// Stub phrases xoay vòng để test pipeline khi chưa có API key
+// Stub phrases xoay vòng — chỉ các cụm có animation glb sẵn (xin chào, tạm biệt, gặp, lại)
 const STUB_PHRASES = [
   'xin chào',
-  'cảm ơn',
-  'tôi uống nước',
-  'chúng tôi ăn',
-  'bạn là ai',
-  'gia đình tôi',
-  'xin chào cảm ơn',
-  'ông bà cha mẹ anh chị em',
-  'máy bay',           // OOV để test unknown term
-  'tôi ở đâu bao nhiêu',
+  'tạm biệt',
+  'gặp lại',
+  'tạm biệt hẹn gặp lại',
+  'xin chào tạm biệt',
 ]
 let stubIndex = 0
 

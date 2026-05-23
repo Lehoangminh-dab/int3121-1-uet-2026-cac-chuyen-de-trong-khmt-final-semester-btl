@@ -3,13 +3,14 @@ import { ViroARSceneNavigator } from '@reactvision/react-viro'
 import { ARSignScene } from './ARSignScene'
 import { setCurrentSign, waitForVideoFinish } from './arSignBus'
 
-const FALLBACK_CLIP_MS = 1500
+const FALLBACK_CLIP_MS = 4500
 
 export function ARSignContainer() {
   return (
     <View style={styles.container}>
       <ViroARSceneNavigator
         autofocus
+        worldAlignment="Camera"
         initialScene={{ scene: ARSignScene }}
         style={styles.scene}
       />

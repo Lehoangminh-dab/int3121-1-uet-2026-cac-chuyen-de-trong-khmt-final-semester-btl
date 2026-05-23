@@ -65,6 +65,8 @@ ViSignAR/
 
 ## Cài đặt
 
+**Yêu cầu Android build:** JDK **17** (Expo SDK 54 / Gradle 8 không chạy với Java 8). Đặt `JAVA_HOME` trỏ tới JDK 17, hoặc chỉnh `org.gradle.java.home` trong `android/gradle.properties`.
+
 ```bash
 cd ViSignAR
 npm install
@@ -80,6 +82,8 @@ cp .env.example .env
 ---
 
 ## Chạy
+
+Có thể chạy từ thư mục gốc repo (`npm run android` chuyển tiếp sang `ViSignAR/`) hoặc từ `ViSignAR/`.
 
 ```bash
 # Android

@@ -49,9 +49,22 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "ViSignAR cần camera để hiển thị ngôn ngữ ký hiệu chồng lên khung hình thực.",
-          "microphonePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt.",
+          "cameraPermission": "ViSignAR cần camera để hiển thị ký hiệu (Viro AR hoặc chế độ mô phỏng khi không có ARCore).",
           "recordAudioAndroid": false
+        }
+      ],
+      [
+        "@reactvision/react-viro",
+        {
+          "android": {
+            "xRMode": "AR"
+          },
+          "ios": {
+            "cameraUsagePermission": "ViSignAR cần camera để hiển thị ngôn ngữ ký hiệu trong không gian thực (AR).",
+            "microphoneUsagePermission": "ViSignAR cần microphone để nhận dạng giọng nói tiếng Việt.",
+            "photosPermission": "ViSignAR có thể lưu ảnh AR vào thư viện ảnh.",
+            "savephotosPermission": "ViSignAR có thể lưu ảnh AR vào thư viện ảnh."
+          }
         }
       ]
     ]

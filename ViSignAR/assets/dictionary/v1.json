@@ -2,6 +2,9 @@
   "version": "1.0.0",
   "entries": [
     { "source": "xin chào",  "signIds": ["SIGN-CHAO"],       "priority": 10 },
+    { "source": "tạm biệt",  "signIds": ["SIGN-TAM_BIET"],  "priority": 10 },
+    { "source": "gặp",       "signIds": ["SIGN-GAP"],       "priority": 5  },
+    { "source": "lại",       "signIds": ["SIGN-LAI"],       "priority": 5  },
     { "source": "cảm ơn",    "signIds": ["SIGN-CAM_ON"],     "priority": 10 },
     { "source": "chúng tôi", "signIds": ["SIGN-CHUNG_TOI"],  "priority": 10 },
     { "source": "chúng ta",  "signIds": ["SIGN-CHUNG_TA"],   "priority": 10 },

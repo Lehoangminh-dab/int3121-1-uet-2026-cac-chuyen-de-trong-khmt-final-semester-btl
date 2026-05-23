@@ -1,8 +1,10 @@
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useEffect, useState } from 'react'
 import { useSettings } from '../src/hooks/useSettings'
-import { setConsent, setDelay } from '../src/store/settings'
+import { setConsent, setDelay, setForceViroAR } from '../src/store/settings'
 import { Colors, FontSizes, Spacing } from '../src/constants/theme'
+import { checkARSupport, getLastARCheck, openARCoreInstaller } from '../src/services/arSupport'
 
 function Para({ children }: { children: string }) {
   return <Text style={styles.cardBody}>{children}</Text>
@@ -11,7 +13,21 @@ function Para({ children }: { children: string }) {
 const DELAY_OPTIONS = [500, 750, 1000, 1500, 2000]
 
 export default function SettingsScreen() {
-  const { delayMs, consentGiven } = useSettings()
+  const { delayMs, consentGiven, forceViroAR } = useSettings()
+  const [arStatusText, setArStatusText] = useState('Chưa kiểm tra')
+
+  const refreshARStatus = async () => {
+    setArStatusText('Đang kiểm tra…')
+    const info = await checkARSupport({ forceViro: forceViroAR })
+    setArStatusText(`${info.status.toUpperCase()}${info.rawCode ? ` (${info.rawCode})` : ''} — ${info.message}`)
+  }
+
+  useEffect(() => {
+    const last = getLastARCheck()
+    if (last.status !== 'checking') {
+      setArStatusText(`${last.status.toUpperCase()} — ${last.message}`)
+    }
+  }, [forceViroAR])
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -30,6 +46,32 @@ export default function SettingsScreen() {
               thumbColor={Colors.white}
               trackColor={{ false: '#333333', true: Colors.blue }}
             />
+          </View>
+        </View>
+
+        {/* AR / ARCore */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>AR & ARCore</Text>
+          <Para>
+            Mặc định app dùng AR mô phỏng (ổn định). Chỉ bật &quot;Ưu tiên Viro AR&quot; khi muốn thử AR thật — một số máy (ví dụ Galaxy A16 5G) có thể văng app khi bật.
+          </Para>
+          <Text style={styles.arStatus}>{arStatusText}</Text>
+          <View style={styles.consentRow}>
+            <Text style={styles.consentLabel}>Ưu tiên Viro AR (ARCore)</Text>
+            <Switch
+              value={forceViroAR}
+              onValueChange={setForceViroAR}
+              thumbColor={Colors.white}
+              trackColor={{ false: '#333333', true: Colors.blue }}
+            />
+          </View>
+          <View style={styles.arActions}>
+            <TouchableOpacity style={styles.linkBtn} onPress={refreshARStatus}>
+              <Text style={styles.linkBtnText}>Kiểm tra lại ARCore</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.linkBtn} onPress={openARCoreInstaller}>
+              <Text style={styles.linkBtnText}>Mở Google Play Services for AR</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -69,7 +111,7 @@ export default function SettingsScreen() {
             <Text style={styles.cardBody}>Dự án nghiên cứu UET — INT3121-1 (2026)</Text>
           </View>
           <Para>Chuyển đổi tiếng Việt nói sang hoạt ảnh 3D Ngôn ngữ Ký hiệu Việt Nam (VSL).</Para>
-          <Para>Stack: Expo + React Native + Unity + OpenAI Whisper STT.</Para>
+          <Para>Stack: Expo + React Native + ViroReact (ARCore) + OpenAI Whisper STT.</Para>
         </View>
 
       </ScrollView>
@@ -111,4 +153,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   delayOptionActive: { backgroundColor: Colors.blue, color: Colors.white },
+  arStatus: { color: '#8899BB', fontSize: FontSizes.sm, lineHeight: 20 },
+  arActions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.xs },
+  linkBtn: {
+    borderWidth: 1,
+    borderColor: Colors.blue,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 6,
+  },
+  linkBtnText: { color: Colors.blue, fontSize: FontSizes.sm, fontWeight: '600' },
 })

@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { ARSignScene } from './ARSignScene'
-import { hasVideo } from '../constants/signAssets'
+import { getSignFallbackMs, hasSignAsset } from '../constants/signAssets'
 
 // ---------------------------------------------------------------------------
-// Container AR — thay UnityView.
+// Container AR — ViroReact (ARCore/ARKit) + playSequence bridge.
 //
 // Contract:
 //   playSequence(signIds: string[], delayMs: number) => Promise<void>
 //   - Cap nhat currentSignId vao ARSignScene
-//   - Cho event didJustFinish tu Video (overlay)
-//   - Fallback timeout neu video missing hoac loi loaded
+//   - Cho onFinish tu model 3D hoac didJustFinish tu Video (overlay)
+//   - Fallback timeout neu asset missing hoac loi loaded
 // ---------------------------------------------------------------------------
 
 const FALLBACK_CLIP_MS = 1500
@@ -58,7 +58,7 @@ export async function playSequence(signIds: string[], delayMs: number = 1000): P
     const signId = signIds[i]
     setCurrentSignIdGlobal?.(signId)
 
-    const timeoutMs = hasVideo(signId) ? FALLBACK_CLIP_MS : FALLBACK_CLIP_MS / 2
+    const timeoutMs = hasSignAsset(signId) ? getSignFallbackMs(signId) : FALLBACK_CLIP_MS / 2
 
     await new Promise<void>((resolve) => {
       resolveCurrentClip = resolve

@@ -6,11 +6,13 @@ type Listener = () => void
 interface SettingsState {
   delayMs: number
   consentGiven: boolean
+  forceViroAR: boolean
 }
 
 const state: SettingsState = {
   delayMs: 1000,
   consentGiven: false,
+  forceViroAR: false,
 }
 
 const listeners = new Set<Listener>()
@@ -30,6 +32,11 @@ export function setDelay(ms: number) {
 
 export function setConsent(given: boolean) {
   state.consentGiven = given
+  notify()
+}
+
+export function setForceViroAR(enabled: boolean) {
+  state.forceViroAR = enabled
   notify()
 }
 

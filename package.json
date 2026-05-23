@@ -1,0 +1,13 @@
+{
+  "name": "int3121-uet-visignar-root",
+  "private": true,
+  "scripts": {
+    "start": "npm run start --prefix ViSignAR",
+    "android": "npm run android --prefix ViSignAR",
+    "android:emu": "npm run android:emu --prefix ViSignAR",
+    "emu:boot": "npm run emu:boot --prefix ViSignAR",
+    "ios": "npm run ios --prefix ViSignAR",
+    "web": "npm run web --prefix ViSignAR",
+    "install:app": "npm install --prefix ViSignAR"
+  }
+}

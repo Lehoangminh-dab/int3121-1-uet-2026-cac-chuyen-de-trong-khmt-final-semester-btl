@@ -1349,7 +1349,6 @@ tiến trong tương lai về khả năng mở rộng, độ chính xác và ph�
   - Nếu có hình ảnh và/hoặc bảng biểu, KHÔNG được xóa chúng. Giữ nguyên, hoặc tinh chỉnh chúng theo hướng dẫn của tôi.
   - Nếu có trích dẫn, hãy giữ nguyên, không được xóa.
   - Giữ các câu dài tối đa 1-2 dòng. Nếu một câu quá dài, hãy chia nhỏ nó thành nhiều câu để dễ đọc hơn.
-  - TUYỆT ĐỐI KHÔNG ĐƯỢC SỬ DỤNG TỪ NGỮ MANG TÍNH CHỦ QUAN/CỰC ĐOAN như 'đột phá', 'hoàn toàn', v.v...Giữ cho văn phong mang tính khách quan, chuẩn theo tiêu chuẩn của khoa học.
   - Nếu có hình vẽ hay bảng, hãy đảm bảo chúng đi kèm theo với cả chú thích (Caption)
   - Nếu có hình vẽ mang tính kỹ thuật, hãy biểu diễn chúng bằng hình mermaid nếu có thể.
   </warnings>
@@ -1360,5 +1359,6 @@ tiến trong tương lai về khả năng mở rộng, độ chính xác và ph�
   - Làm nổi bật các ý tưởng và khái niệm chính bằng cách **in đậm văn bản**.
   - Trên hết, giữ cho cách viết đơn giản và rõ ràng. Rõ ràng luôn chiến thắng sự cầu kỳ.
   - Giữ cho ngôn ngữ đơn giản và dễ hiểu, không sử dụng kỹ thuật nhiều hơn mức cần thiết.
+  - TUYỆT ĐỐI KHÔNG ĐƯỢC SỬ DỤNG TỪ NGỮ MANG TÍNH CHỦ QUAN/CỰC ĐOAN như 'đột phá', 'hoàn toàn', v.v...Giữ cho văn phong mang tính khách quan, chuẩn theo tiêu chuẩn của khoa học.
   </language_and_tone>
 </instructions>

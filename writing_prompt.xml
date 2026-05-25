@@ -1351,6 +1351,7 @@ tiến trong tương lai về khả năng mở rộng, độ chính xác và ph�
   - Giữ các câu dài tối đa 1-2 dòng. Nếu một câu quá dài, hãy chia nhỏ nó thành nhiều câu để dễ đọc hơn.
   - Nếu có hình vẽ hay bảng, hãy đảm bảo chúng đi kèm theo với cả chú thích (Caption)
   - Nếu có hình vẽ mang tính kỹ thuật, hãy biểu diễn chúng bằng hình mermaid nếu có thể.
+  - Lưu ý rằng ở phần <current>, đã có những nguồn trích dẫn ở phiên bản hiện tại của tiểu luận. Nếu nội dung mới bạn tạo ra có sử dụng một trong những nguồn này, hãy đánh số cho phù hợp thay vì thêm lại nguồn đó. Ngoài ra, nếu bạn muốn bổ sung thêm nguồn, hãy đánh số những nguồn mới này cho phù hợp, tính từ nguồn mới nhất của phiên bản hiện tại (ví dụ, nếu phiên bản hiện tại có nguồn được đánh số 1, 2, và 3, thì khi bạn thêm nguồn, chúng phải được đánh số từ số 4 trở đi).
   </warnings>
   <language_and_tone>
   - Trên hết, hãy bám sát văn phong của tôi khi viết. Văn phong của tôi được thể hiện rất rõ ràng trong bài mẫu (exemplar) mà tôi đã cung cấp cho bạn.

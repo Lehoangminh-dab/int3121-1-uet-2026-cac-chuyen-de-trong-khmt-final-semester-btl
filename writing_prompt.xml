@@ -197,7 +197,7 @@ Bạn là một chuyên gia viết luận văn. Công việc của bạn là gi�
 </context>
 <task>
   <request>
-  Tôi cần bạn giúp tôi hoàn thiện viết chương 1 của tiểu luận (Với nội dung hiện tại, đó sẽ là chương 2). Tôi đã đính kèm dàn ý của tiểu luận ở trong prompt này, mục <outline>. Ngoài ra, tôi cũng đã thực hiện nghiên cứu để thu thập thêm dữ liệu có thể giúp bạn khai triển nội dung của tiểu luận (để trong phần <research>). Nhớ trích dẫn các nguồn một cách phù hợp bằng cách tiêu chuẩn trong giới viết bài báo nghiên cứu khoa học (ví dụ sử dụng [1], [2], ...). Sau đó trả lại cho tôi nội dung để trèn vào mục trích dẫn cách biệt riêng so với nội dung của chương (ví dụ [1] Tên nguồn...). Hơn nữa, tôi cũng đã bao gồm cả nội dung hiện tại của tiểu luận ở trong mục <current>. Cuối cùng, tôi đã bổ sung thêm thông tin về hệ thống ở mục <extra_system_context>.
+  Tôi cần bạn giúp tôi hoàn thiện viết chương 3 của tiểu luận, phân tích và thiết kế hệ thống (Trong dàn ý, đó là chương 2). Tôi đã đính kèm dàn ý của tiểu luận ở trong prompt này, mục <outline>. Ngoài ra, tôi cũng đã thực hiện nghiên cứu để thu thập thêm dữ liệu có thể giúp bạn khai triển nội dung của tiểu luận (để trong phần <research>). Nhớ trích dẫn các nguồn một cách phù hợp bằng cách tiêu chuẩn trong giới viết bài báo nghiên cứu khoa học (ví dụ sử dụng [1], [2], ...). Sau đó trả lại cho tôi nội dung để trèn vào mục trích dẫn cách biệt riêng so với nội dung của chương (ví dụ [1] Tên nguồn...). Hơn nữa, tôi cũng đã bao gồm cả nội dung hiện tại của tiểu luận ở trong mục <current>. Cuối cùng, tôi đã bổ sung thêm thông tin về hệ thống ở mục <extra_system_context>.
   </request>
   <current>
 Chương 1 Mở đầu
@@ -226,6 +226,68 @@ Kết luận và hướng phát triển. Tóm lược những đóng góp của 
 
 
 Chương 2 Cơ sở lý thuyết
+2.1. Công nghệ nhận dạng giọng nói tự động (Speech-to-Text - STT)
+Nhận dạng giọng nói tự động là quá trình chuyển đổi tín hiệu âm thanh thành văn bản kỹ thuật số. Công nghệ này đóng vai trò nền tảng trong các hệ thống hỗ trợ giao tiếp cho người khiếm thính. Nghiên cứu sử dụng mô hình OpenAI Whisper cho tác vụ này. Whisper áp dụng kiến trúc học sâu Transformer theo mô hình chuỗi sang chuỗi (sequence-to-sequence). Cấu trúc này giúp nhận diện chính xác ngôn ngữ có dấu và chịu được nhiễu môi trường công cộng. Whisper cũng hỗ trợ cơ chế định hướng ngữ cảnh (bias prompt). Cơ chế này giúp định hướng mạng nơ-ron ưu tiên nhận diện các từ khóa thuộc một lĩnh vực cụ thể.
+Để xử lý tối ưu ngôn ngữ tiếng Việt, hệ thống kế thừa nền tảng PhoWhisper [4]. PhoWhisper là một biến thể Transformer được tinh chỉnh chuyên sâu. Hệ thống này được huấn luyện trên 844 giờ dữ liệu âm thanh phân hóa đa dạng. Dữ liệu bao gồm các mẫu ghi âm đường phố như Common Voice [5] và tập đọc chuẩn hóa VIVOS [6]. Hiệu năng của các mô hình STT thường được đánh giá khách quan qua Tỷ lệ lỗi từ ($WER$). Hàm mất mát $WER$ được định nghĩa như sau:
+$$WER = \frac{S + D + I}{N}$$
+Trong đó $S$ là số từ bị thay thế, $D$ là số từ bị xóa, $I$ là số từ chèn thêm và $N$ là tổng số từ trong chuỗi văn bản gốc. Tỷ lệ $WER$ càng thấp thì độ chính xác của hệ thống giải mã càng cao. Bảng 2.1 trình bày chi tiết sự đánh đổi giữa kích thước tham số và độ chính xác của các biến thể PhoWhisper.
+Bảng 2.1: So sánh hiệu năng giải mã các biến thể của mô hình PhoWhisper [4].
+| Phiên bản | Số lượng tham số | Tỷ lệ lỗi trên Common Voice (%) | Tỷ lệ lỗi trên VIVOS (%) |
+| --- | --- | --- | --- |
+| PhoWhisper-tiny | 39 Triệu | 19,05 | 10,41 |
+| PhoWhisper-base | 74 Triệu | 16,19 | 8,46 |
+| PhoWhisper-small | 244 Triệu | 11,08 | 6,33 |
+| PhoWhisper-medium | 769 Triệu | 8,27 | 4,97 |
+| PhoWhisper-large | 1,55 Tỷ | 8,14 | 4,67 |
+
+Dữ liệu thực nghiệm chỉ ra phiên bản PhoWhisper-small đạt mức cân bằng tối ưu về mặt kiến trúc. Cấu trúc 244 triệu tham số giúp mô hình duy trì độ chính xác cao trên các tập dữ liệu nhiễu. Đồng thời, cấu hình này yêu cầu tài nguyên vừa phải. Điều này đáp ứng tốt nhu cầu triển khai ứng dụng di động theo thời gian thực.
+Một thách thức lớn của kiến trúc Transformer là hiện tượng ảo giác âm học (acoustic hallucination) [7]. Mô hình có xu hướng tự động tạo ra văn bản ảo giác khi môi trường hoàn toàn im lặng. Một số nghiên cứu sâu chỉ ra nguyên nhân đến từ sự sai lệch trọng số của các đầu chú ý (attention heads) cụ thể [8].
+Như thể hiện tại Hình \ref{fig:stt_pipeline}, tiểu luận áp dụng quy trình kiểm soát ảo giác nhiều lớp. Hệ thống tích hợp một bộ lọc phát hiện hoạt động giọng nói (Voice Activity Detection - VAD) [9]. Bộ lọc này trực tiếp chặn các khung âm thanh không chứa tiếng người ở cổng đầu vào. Tiếp theo, hệ thống vô hiệu hóa tính năng sử dụng văn bản cũ làm ngữ cảnh để tránh vòng lặp ảo giác dây chuyền. Cuối cùng, hệ thống áp dụng cơ chế đánh giá biến số xác suất im lặng ($no\_speech\_prob$). Mọi kết quả dịch có $no\_speech\_prob$ vượt quá giới hạn an toàn 0,6 đều bị loại bỏ tự động.
+```mermaid
+graph TD
+    A[Âm thanh đầu vào] --> B{Bộ lọc Silero VAD}
+    B -->|Xác suất tiếng người > 0.5| C[Mô hình Whisper STT]
+    B -->|Chỉ có tiếng ồn| D[Hủy bỏ tiến trình]
+    C --> E{Xác suất no_speech_prob < 0.6?}
+    E -->|Thỏa mãn điều kiện| F[Văn bản đầu ra hợp lệ]
+    E -->|Cảnh báo ảo giác im lặng| D
+
+```
+\caption{Hình 2.1: Quy trình lọc nhiễu âm thanh và chống ảo giác tự động. \label{fig:stt_pipeline}}
+
+2.2. Công nghệ thực tế ảo tăng cường (AR) trên thiết bị di động
+Thực tế ảo tăng cường là công nghệ lồng ghép các đối tượng đồ họa kỹ thuật số vào môi trường vật lý xung quanh. Các thiết bị di động hiện đại thực thi điều này bằng cách tính toán hình ảnh camera kết hợp với cảm biến gia tốc. Hệ điều hành iOS cung cấp bộ công cụ Apple ARKit [10]. Khung phần mềm này cung cấp kiến trúc theo dõi không gian (World Tracking) và định vị mốc (Spatial Anchoring) chính xác.
+Nghiên cứu sử dụng thư viện kết xuất ViroReact [11]. ViroReact là một khung phần mềm mã nguồn mở mạnh mẽ. Công cụ này hỗ trợ xây dựng ứng dụng AR trực tiếp bằng ngôn ngữ React Native. Nó hoạt động bằng cách đóng gói các thư viện ARKit gốc của iOS thành các thành phần React thân thiện. Công nghệ này chuyển đổi trực tiếp các thẻ khai báo mã nguồn thành các lệnh vẽ đồ họa gốc. Cấu trúc này giúp tối ưu hóa hiệu năng render 3D (Native OpenGL/Metal Rendering Engine) trên phần cứng thiết bị.
+2.3. Phân tích so sánh và Lý do lựa chọn ViroReact AR thay vì Unity
+Đa số các dự án đồ họa 3D hiện nay ưu tiên sử dụng công cụ Unity. Chúng thường được nhúng vào ứng dụng thông qua kiến trúc thư viện độc lập (Unity as a Library - UaaL) [12]. Tuy nhiên, kiến trúc này cô lập toàn bộ môi trường chạy vào các gói liên kết động. Cách tiếp cận này tạo ra tệp cài đặt cực kỳ lớn. Hệ thống Unity cũng ép buộc nạp toàn bộ cấu trúc dữ liệu mô hình vào RAM [13]. Quá trình duy trì vòng lặp đồ họa ở tốc độ tối đa khiến thiết bị hao pin rất nhanh [14]. Đáng lưu ý hơn, môi trường Unity không hỗ trợ các công nghệ tiếp cận (accessibility) mặc định của hệ điều hành di động [15].
+Như thể hiện tại Hình \ref{fig:viro_vs_unity}, ViroReact giải quyết hoàn toàn các rào cản tài nguyên này. Giải pháp này gọi thẳng vào thư viện ARKit hệ thống.
+```mermaid
+graph LR
+    subgraph Giải pháp Unity nhúng
+    U1[Mã React Native] -->|Cầu nối dữ liệu trễ cao| U2[Game Engine Unity]
+    U2 -->|Kết xuất vòng lặp liên tục| U3[Thiết bị hiển thị]
+    end
+    subgraph Giải pháp ViroReact
+    V1[Mã React Native] -->|Gọi lệnh hệ thống trực tiếp| V2[ARKit API gốc của iOS]
+    V2 -->|Chỉ vẽ khi có thay đổi cảnh| V3[Thiết bị hiển thị]
+    end
+
+```
+\caption{Hình 2.2: Kiến trúc kết xuất đồ họa giữa Unity và ViroReact. \label{fig:viro_vs_unity}}
+Thay vì chạy một bộ máy đồ họa ngầm độc lập, ViroReact tích hợp thẳng vào luồng kết xuất gốc. Việc tận dụng chuẩn tệp tin `.glb` siêu nhẹ giúp duy trì tài nguyên phần cứng ở mức an toàn. Bảng 2.2 tổng hợp khách quan sự chênh lệch hiệu năng giữa hai giải pháp này.
+Bảng 2.2: Đánh giá kiến trúc đồ họa Unity nhúng và ViroReact [12], [15].
+| Tiêu chí kỹ thuật | Môi trường Unity nhúng (UaaL) | Nền tảng ViroReact AR |
+| --- | --- | --- |
+| Dung lượng ứng dụng | Tăng mạnh, thường phình to bộ cài gấp 4 lần | Tối ưu, chỉ làm tăng khoảng 15 MB dữ liệu gốc |
+| Mức độ chiếm dụng RAM | Lớn, dễ gây tràn bộ nhớ trên máy cấu hình thấp | Thấp, chỉ cấp phát bộ nhớ cho mô hình đang nạp |
+| Tỷ lệ hao hụt năng lượng | Cao, vòng lặp đồ họa ép GPU hoạt động liên tục | Thấp, chỉ cập nhật lệnh vẽ khi có sự thay đổi |
+| Tích hợp tính năng trợ năng | Hoàn toàn không tương thích với cài đặt hệ điều hành | Hỗ trợ tuyệt đối trình đọc màn hình và phóng to chữ |
+Lựa chọn ViroReact là một quyết định kiến trúc mang tính phù hợp của nghiên cứu. Nó đảm bảo thiết bị của người dùng không bị quá nhiệt khi đàm thoại trong thời gian dài. Hệ thống cũng kế thừa toàn bộ các thiết lập trợ năng sẵn có của người khuyết tật.
+2.4. Công trình nghiên cứu liên quan
+Các hệ thống công nghệ hỗ trợ giao tiếp cho người khiếm thính tại Việt Nam đang từng bước phát triển. Phần lớn các giải pháp hiện tại hoạt động dưới dạng nền tảng từ điển lưu trữ video 2D tĩnh. Dự án nổi bật nhất là từ điển trực tuyến `tudienngonngukyhieu.com` được phát triển bởi công ty DVMS [16]. Nền tảng này cung cấp một kho tệp tin video ngôn ngữ ký hiệu chất lượng cao. Tuy nhiên, các video 2D thường thiếu đi tính linh hoạt và không cho phép người dùng quan sát cử chỉ từ nhiều góc độ không gian thực tế.
+Trong lĩnh vực dịch thuật ngôn ngữ ký hiệu tự động, một số nhóm tác giả đã đề xuất các thuật toán dịch máy dựa trên luật (Rule-Based Machine Translation) [17]. Các công trình này phân tích văn bản nguồn và biến đổi cấu trúc theo ngữ pháp chuyên biệt của Ngôn ngữ Ký hiệu Việt Nam (VSL). Dù đã giải quyết được vấn đề đảo ngữ pháp, các nghiên cứu này chưa tích hợp bộ nhận dạng giọng nói tự động. Chúng cũng chưa đưa ra được phương pháp kết xuất đồ họa 3D hiệu năng cao trên thiết bị phần cứng di động.
+Tiểu luận ViSignAR lấp đầy khoảng trống công nghệ này bằng cách thiết kế một kiến trúc đồng bộ. Hệ thống kết hợp mô hình AI giải mã giọng nói tự động Whisper với khung kết xuất đồ họa ViroReact. Phương pháp này trực tiếp dịch lời nói của nhân viên y tế thành các nhân vật hoạt hình AR tương tác ngay trong không gian thực. Toàn bộ quy trình hoạt động trơn tru trên một chiếc điện thoại thông minh tiêu chuẩn. Ứng dụng khắc phục được rào cản cấu hình phần cứng khắt khe của các hệ thống máy tính truyền thống.
+
 Chương 3 Phân tích và thiết kế hệ thống
 Chương 4 Hiện thực và đánh giá
 Kết luận và hướng phát triển

@@ -98,66 +98,12 @@
 * **Sơ đồ kiến trúc tổng thể (High-level Architecture)**: 
   Mô tả sự tương tác giữa 3 lớp chính: Lớp Giao diện (React Native UI Screens), Lớp Dịch vụ Logic (Services: STT API, Lookup Engine, Playback Queue Worker) và Lớp Hiển thị Không gian AR (ViroReact Engine).
 * **Các biểu đồ tuần tự (Sequence Diagrams)**:
-
-#### 1. Luồng Ghi âm và Nhận dạng Giọng nói qua OpenAI Whisper:
-```
-[User] --------> (Bắt đầu nói) --------> [RN UI: speech-to-sign.tsx]
-                                                |
-                                        (Yêu cầu quyền & Bật Mic)
-                                                |
-                                                v
-                                         [expo-av Module] --(Ghi âm m4a)--> [Local Storage]
-                                                |
-[User] --------> (Nhấn Dừng/Tự dừng) ----> [RN UI: speech-to-sign.tsx]
-                                                |
-                                                v
-                                         [stt.ts Service]
-                                                |
-                                        (Kiểm tra kích thước & thời lượng)
-                                                |
-                                                v
-                                         [OpenAI Whisper API]
-                                                |
-                                         (Trả về JSON kết quả)
-                                                |
-                                                v
-                                         [stt.ts Service] --(Kiểm tra no_speech_prob)--> [RN UI]
-```
-
-#### 2. Luồng Chuẩn hóa, Tra cứu Từ điển và Sắp xếp Lịch trình Phát Ký hiệu:
-```
-[RN UI] --(Normalized Text)--> [normalize.ts]
-      |
-      +--(So khớp cụm từ ưu tiên)--> [lookup.ts Engine]
-                                            |
-                                  (Duyệt từ điển v1.json theo Priority)
-                                            |
-                                            v
-                                  (Trả về danh sách Sign IDs + OOV)
-                                            |
-[RN UI] <-----------------------------------+
-  |
-  +--(Đưa Sign IDs vào Queue)--> [playback.ts Worker]
-                                         |
-                                (Lặp duyệt từng Sign ID)
-                                         |
-                                         v
-                                [arSignBus.ts (Event Bus)] --(Set Current Sign)--> [ARSignScene]
-                                         |                                               |
-                                         |                                      (Dựng đối tượng .glb)
-                                         |                                               |
-                                         |                                      (Phát animation 3D)
-                                         |                                               |
-                                         |<--(Báo hoàn thành sau 4s)--------------------+
-                                         |
-                                  (Chờ delayMs)
-                                         |
-                                (Chuyển sang ký hiệu tiếp theo)
-```
+  Các biểu đồ tuần tự mô tả chi tiết luồng tương tác thời gian thực giữa các thành phần logic trong hệ thống được trình bày cụ thể trong Chương 3 (Mục 3.3) để gắn liền với kết quả vận hành thực tế của hệ thống.
 
 ### 2.3. Thiết kế Dữ liệu và Tiêu chuẩn Hoạt ảnh VSL
-* **Cấu trúc Dữ liệu Từ điển (`assets/dictionary/v1.json`)**:
-  * Đặc tả schema dữ liệu JSON của từ điển: các trường thuộc tính `source` (chuỗi văn bản tiếng Việt chuẩn hóa), `signIds` (mảng mã nhận diện hoạt ảnh 3D tương ứng), và `priority` (mức độ ưu tiên để thực hiện thuật toán so khớp từ dài trước).
+* **Cấu trúc Cơ sở Dữ liệu Từ điển**:
+  * Thiết kế cấu trúc dữ liệu từ điển ánh xạ: Định nghĩa cách thức lưu trữ và tổ chức các cụm từ tiếng Việt đã chuẩn hóa, liên kết trực tiếp với các mã định danh hoạt ảnh ký hiệu 3D tương ứng.
+  * Thiết kế cơ chế phân cấp độ ưu tiên (Priority Index) để phục vụ cho thuật toán tra cứu so khớp cụm từ ưu tiên từ dài nhất trước, đảm bảo tính tất định và tối ưu hóa ngữ nghĩa trong quá trình dịch thuật.
 * **Đặc tả Tiêu chuẩn Hoạt ảnh 3D Ký hiệu (`REQ-FUNC-009`)**:
   * Định nghĩa cấu trúc khung chuyển động thống nhất cho mỗi tệp tin `.glb` gồm 4 giai đoạn bắt buộc:
     1. **`phase_start` (0.0s - 0.2s)**: Chuẩn bị chuyển từ tư thế nghỉ sang tư thế bắt đầu ký hiệu.
@@ -175,23 +121,95 @@
 * **Cấu hình phần cứng kiểm thử thực tế**: Thiết bị vật lý **iPhone (iOS 18)** tích hợp vi xử lý Apple Silicon và bộ gia tốc đồ họa Metal, camera hỗ trợ ARKit.
 
 ### 3.2. Hiện thực Quy trình Đóng gói Tự động Unsigned iOS IPA trên Cloud (Đóng góp Kỹ thuật Nổi bật)
-* **Khó khăn thực tế**: Các rào cản về chi phí sở hữu Apple Developer Account ($99/năm) để build bản cài đặt thật trên thiết bị thực tế.
-* **Giải pháp đề xuất và Hiện thực hóa**: Xây dựng quy trình tự động hóa đóng gói ứng dụng di động iOS dạng không ký mã (unsigned) thông qua Expo Application Services (EAS) dùng hệ thống máy chủ Cloud macOS.
-* **Đặc tả cấu hình hệ thống**:
-  * Phân tích tệp cấu hình **`eas.json`**: Sử dụng thuộc tính `withoutCredentials: true` và liên kết với tệp kịch bản triển khai custom **`ios-unsigned.yml`**.
-  * Phân tích chi tiết quy trình xử lý trong tệp cấu hình **`.eas/build/ios-unsigned.yml`**:
-    1. Đồng bộ mã nguồn trên cloud máy chủ macOS (`eas/checkout`).
-    2. Cài đặt các thư viện phụ thuộc của dự án (`eas/install_node_modules`).
-    3. Thực hiện sinh thư mục dự án Xcode tự động thông qua Expo CLI (`eas/prebuild` với tham số `platform: ios`).
-    4. Cập nhật và liên kết các thư viện Pods native chuyên sâu cho ViroReact (`pod install --repo-update`).
-    5. Thực hiện dịch ngược mã nguồn bằng Xcode CLI (`xcodebuild`) với các cờ vô hiệu hóa ký mã:
-       `CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CODE_SIGN_ENTITLEMENTS=""`
-    6. Tạo thư mục cấu trúc chuẩn `Payload/`, sao chép tệp tin nhị phân `.app` đã được build thành công vào bên trong và tiến hành nén định dạng zip để tạo ra tệp tin cài đặt **`ViSignAR-unsigned.ipa`**.
-    7. Tải sản phẩm lên máy chủ lưu trữ đám mây của Expo phục vụ cài đặt thử nghiệm trực tiếp trên iPhone đã được bẻ khóa kiểm thử hoặc cài qua các ứng dụng hỗ trợ (Sideloading).
+* **Khó khăn thực tế**: Rào cản lớn về chi phí đăng ký tài khoản nhà phát triển Apple Developer Account ($99/năm) đối với các nhóm nghiên cứu độc lập để biên dịch và thử nghiệm ứng dụng trên thiết bị iPhone vật lý.
+* **Giải pháp và Quy trình Kiến trúc đóng gói**: 
+  * Thiết kế và triển khai một quy trình tích hợp và phân phát liên tục (CI/CD) tự động hóa hoàn toàn việc đóng gói ứng dụng di động iOS dưới dạng không ký mã (unsigned package) trên nền tảng đám mây macOS.
+  * Giải pháp cho phép tự động chuyển đổi mã nguồn dự án thành một gói cài đặt ứng dụng iOS độc lập (`.ipa`), bỏ qua yêu cầu chứng chỉ nhà phát triển của Apple để thực hiện cài đặt thử nghiệm trực tiếp trên thiết bị thực tế thông qua các công cụ cài đặt ứng dụng bên thứ ba (sideloading).
+* **Các bước triển khai trong đường ống CI/CD tự động**:
+  1. **Khởi tạo môi trường ảo**: Tự động tải mã nguồn, thiết lập phiên bản Node.js và đồng bộ hóa các gói thư viện phụ thuộc của dự án.
+  2. **Biên dịch mã nguồn bản xứ (Prebuild & Pods Linking)**: Sinh mã nguồn dự án iOS bản xứ (Xcode native project) và tự động đồng bộ hóa, cấu hình các thư viện Native Modules phức tạp của bộ dựng ARKit/ViroReact.
+  3. **Biên dịch gói ứng dụng không ký mã**: Sử dụng các cấu hình biên dịch để vô hiệu hóa tính năng Code Signing của Xcode. Đường ống thực thi việc biên dịch trực tiếp mã nguồn C++/Swift của engine AR sang tệp nhị phân iOS gốc mà không yêu cầu khóa bảo mật.
+  4. **Đóng gói và Đóng băng sản phẩm**: Tự động trích xuất tệp ứng dụng nhị phân bản xứ, đóng gói theo cấu trúc tiêu chuẩn và nén thành tệp cài đặt `.ipa` unsigned để sẵn sàng tải về máy và sideload lên thiết bị thử nghiệm thực tế.
 
-### 3.3. Hiện thực Giao diện và Biểu diễn Kết quả Demo (Visual Results)
-* **Giao diện Ứng dụng**: Mô tả chi tiết giao diện thiết kế theo hệ màu tối giản giúp tiết kiệm năng lượng pin và tập trung thị giác tối đa cho người khiếm thính.
-* **Dựng hình AR**: Hiển thị các hình ảnh chụp thực tế màn hình (Screenshots) của không gian AR thực tế thu được qua camera iPhone, đối tượng ký hiệu 3D neo đậu cố định tự nhiên trước camera và các thanh trạng thái trực quan biểu diễn chữ dịch nghĩa ký hiệu đang được phát thời gian thực.
+### 3.3. Kết quả Hiện thực Giao diện, Biểu đồ Tuần tự và Demo (Visual Results & System Sequence)
+* **Giao diện và Thiết kế Trải nghiệm Ứng dụng**:
+  * Mô tả chi tiết giao diện tối giản với hệ màu chủ đạo giúp tiết kiệm dung lượng pin và tập trung tối đa sự chú ý của người khiếm thính vào chuyển động của mô hình AR.
+  * Trực quan hóa các trạng thái tương tác của ứng dụng bao gồm trạng thái chờ, đang thu âm giọng nói, đang xử lý dịch thuật, và trạng thái đang phát hoạt ảnh ký hiệu.
+
+* **Phân tích Luồng Tuần tự của Hệ thống (System Sequence Flows)**:
+  Để minh họa rõ nét cách thức vận hành thực tế của hệ thống khi chạy trên thiết bị, các biểu đồ tuần tự dưới đây mô tả quá trình xử lý đồng bộ và không đồng bộ giữa các thành phần logic chính:
+
+  #### 1. Luồng Ghi âm và Nhận dạng Giọng nói thời gian thực:
+  Mô tả chu kỳ tiếp nhận âm thanh từ Microphone, lưu trữ tạm thời và gửi yêu cầu dịch thuật qua mạng để nhận dạng giọng nói, đồng thời áp dụng thuật toán kiểm định chất lượng để lọc bỏ tiếng ồn ảo giác.
+  
+  ```
+  [Người dùng] --------> (Bắt đầu nói) --------> [Giao diện Ứng dụng (Mobile UI)]
+                                                           |
+                                                 (Yêu cầu quyền & Kích hoạt)
+                                                           |
+                                                           v
+                                              [Bộ Ghi âm Thiết bị] --(Ghi âm dạng nén)--> [Bộ lưu trữ tạm thời]
+                                                           |
+  [Người dùng] --------> (Nhấn Dừng / Im lặng) -> [Giao diện Ứng dụng (Mobile UI)]
+                                                           |
+                                                           v
+                                              [Dịch vụ Nhận dạng Giọng nói]
+                                                           |
+                                                   (Gửi dữ liệu âm thanh)
+                                                           |
+                                                           v
+                                              [Dịch vụ OpenAI Whisper STT]
+                                                           |
+                                                   (Trả về văn bản đã nhận dạng)
+                                                           |
+                                                           v
+                                              [Dịch vụ Nhận dạng Giọng nói] --(Lọc nhiễu & ảo giác)--> [Giao diện]
+  ```
+
+  #### 2. Luồng Chuẩn hóa, Dịch thuật Từ điển và Quản lý Phát Ký hiệu AR:
+  Mô tả quá trình nhận văn bản gốc, chuẩn hóa chính tả tiếng Việt, áp dụng thuật toán tra cứu so khớp cụm từ dài nhất trước để chia cắt văn bản thành mảng các ID ký hiệu, sau đó đưa vào hàng đợi quản lý luồng phát đồng bộ để điều khiển hoạt ảnh 3D trong không gian AR thực tế tăng cường.
+  
+  ```
+  [Giao diện Ứng dụng (Mobile UI)] --(Văn bản thô)--> [Bộ Chuẩn hóa Văn bản]
+                |
+                +--(Văn bản đã chuẩn hóa)--> [Bộ Tra cứu Từ điển]
+                                                     |
+                                            (Tra cứu so khớp cụm từ dài nhất)
+                                                     |
+                                                     v
+                                            (Trả về danh sách ID ký hiệu + từ OOV)
+                                                     |
+  [Giao diện Ứng dụng (Mobile UI)] <-----------------+
+    |
+    +--(Đưa danh sách ID vào Hàng đợi)--> [Bộ Quản lý Luồng Phát (Queue Manager)]
+                                                   |
+                                          (Lặp duyệt từng ID ký hiệu)
+                                                   |
+                                                   v
+                                          [Kênh Sự kiện Phát (Event Bus)] --(Kích hoạt ký hiệu)--> [Bộ Dựng Không gian AR]
+                                                   |                                                   |
+                                                   |                                          (Tải mô hình 3D .glb)
+                                                   |                                                   |
+                                                   |                                          (Phát hoạt ảnh VSL tương ứng)
+                                                   |                                                   |
+                                                   |<--(Báo phát xong/Chuyển tiếp)---------------------+
+                                                   |
+                                            (Chờ thời gian chuyển tiếp)
+                                                   |
+                                          (Chuyển sang ký hiệu kế tiếp)
+  ```
+
+* **Danh sách các Ảnh chụp Thực tế Demo ứng dụng (Screenshots Placeholders)**:
+  Dưới đây là các vị trí bố trí hình ảnh trực quan thể hiện giao diện người dùng thực tế và chất lượng dựng hình AR trên thiết bị iPhone vật lý:
+
+  * **[Ảnh chụp màn hình 3.3.1: Giao diện Trang chủ và Màn hình chính tối giản của ViSignAR]**
+    * *Mô tả*: Giao diện màn hình chính tối giản, nút kích hoạt microphone lớn trực quan và thanh trạng thái chỉ dẫn rõ ràng.
+  * **[Ảnh chụp màn hình 3.3.2: Giao diện Ứng dụng trong trạng thái đang lắng nghe và ghi nhận giọng nói]**
+    * *Mô tả*: Hiệu ứng sóng âm động trực quan khi người dùng đang nói để tăng tính tương tác và báo hiệu trạng thái hoạt động của mic.
+  * **[Ảnh chụp màn hình 3.3.3: Kết quả dựng hình Hoạt ảnh Ký hiệu 3D trong Không gian AR]**
+    * *Mô tả*: Mô hình 3D cử chỉ học động được neo đậu chính xác trong không gian phòng thực tế thông qua camera, đi kèm khung text mô tả chữ dịch nghĩa tương ứng thời gian thực (ví dụ phát ký hiệu "Chào").
+  * **[Ảnh chụp màn hình 3.3.4: Trực quan hóa Giao diện khi gặp Từ ngoài từ điển (OOV)]**
+    * *Mô tả*: Cách hệ thống hiển thị thông báo thân thiện và phát hoạt ảnh ký hiệu mặc định (fallback/stub) để duy trì luồng giao tiếp mà không gây bối rối cho người dùng khi gặp từ khóa chưa được số hóa.
 
 ### 3.4. Kịch bản kiểm thử và Đánh giá hiệu quả Hệ thống
 * **Kịch bản Kiểm thử Chức năng (Functional Test Cases)**:
